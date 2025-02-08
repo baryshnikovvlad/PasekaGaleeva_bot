@@ -21,7 +21,7 @@ def select_users(path):
 def select_user(path, tg_id):
     select = f"""
     SELECT 
-        first_name, phone_number 
+        first_name, last_name, father_name, priority, user_tg_id, phone_number
     FROM 
         users 
     WHERE 
@@ -41,9 +41,20 @@ delete_previous_users = lambda user_tg_id: f"""
 DELETE FROM users WHERE user_tg_id = {user_tg_id};
 """
 
+def edited_text_with_first_name(text, user_tg_id):
+    edited_text = text
+    first_name = select_user(models.path, user_tg_id)[0][0]
+    father_name = select_user(models.path, user_tg_id)[0][2]
+    #print(first_name, father_name)
+    edited_text = edited_text.replace('{first_name}', str(first_name))
+    edited_text = edited_text.replace('{father_name}', str(father_name))
+    #print(edited_text)
+    #edited_text = {'text': str(edited_text)}
+    return edited_text
 
 async def NewsLetterStart(text, path):
     connection = models.create_connection(path)
+    await bot.send_message(chat_id=641371845, text=text) # - разкомментить для дебага
     all_rows_id = """
     SELECT user_id AS all_rows
     FROM users;
@@ -60,5 +71,5 @@ async def NewsLetterStart(text, path):
             user_id = '{models.execute_read_query(connection, all_rows_id)[0][0] + i}'
 """)
         tg_id = models.execute_read_query(connection, select)[0][0]
-        print(tg_id)
-        await bot.send_message(chat_id=tg_id, text=text)
+        #print(tg_id)  # - закомментить для дебага
+        #await bot.send_message(chat_id=tg_id, text=text)  # - закомментить для дебага

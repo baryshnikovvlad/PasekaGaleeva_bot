@@ -8,7 +8,7 @@ from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.context import FSMContext
 from database import models
 from app.keyboards import main, get_number, YoN, my_callback_data
-from database.requests import select_users, select_user, insert_user_from_register, NewsLetterStart
+from database.requests import select_users, select_user, insert_user_from_register, NewsLetterStart, edited_text_with_first_name
 from main import bot, log_file_printer, log_file, dp
 from confidential import admin_id
 
@@ -33,7 +33,7 @@ async def cmd_start(message: Message):
 
 
 @router.message(F.text == 'qawsed')
-async def registracia(message: Message, state: FSMContext):
+async def NewsLetter_(message: Message, state: FSMContext):
     await state.set_state(NewsLetter.text)
     await message.answer('Введи сообщение для рассылки: ')
     log_file_printer(f"{message.from_user.id} - NewsLetter: ", log_file)
@@ -42,17 +42,19 @@ async def registracia(message: Message, state: FSMContext):
 @router.message(NewsLetter.text)
 async def NewsLetter_text(message: Message, state: FSMContext):
     text = message.text
+    user_tg_id = message.from_user.id
     #print(text, type(text))
+    text = edited_text_with_first_name(text, user_tg_id)
+    await message.answer(f"Это все, отправляем?: \n {text}", reply_markup=YoN)
     await state.update_data(text=text)
     await state.set_state(NewsLetter.text)
-    await message.answer(f"Это все, отправляем?: \n {text}", reply_markup=YoN)
     log_file_printer(f"{message.from_user.id} - NewsLetter - text: " + text, log_file)
 
 
 @router.callback_query(my_callback_data.filter(F.data == "Yes"), NewsLetter.text)
 async def NewsLetter_Yes(query: CallbackQuery, state: FSMContext):
     data = await state.get_data()
-    print(data)
+    print(data, type(data))
     try:
         await query.answer("Отправил, проверяй.")
         await NewsLetterStart(data['text'], models.path)
@@ -101,14 +103,17 @@ async def register_name(message: Message, state: FSMContext):
 async def register_number(message: Message, state: FSMContext):
     await state.update_data(user_tg_id=message.contact.user_id)
     data = await state.get_data()
-    if data["user_tg_id"] == admin_id:
-        priority = 1
-    else:
-        priority = 0
+    priority = 0
+    for i in range(admin_id):
+        if data["user_tg_id"] == admin_id[i]:
+            priority = 1
+        else:
+            priority = 0
     insert_user_from_register(data["first_name"], data["last_name"], data["father_name"], priority, data["user_tg_id"], message.contact.phone_number)
     user = select_user(models.path, data["user_tg_id"])
     await message.answer(f"Вы теперь юзер: {user[0][0] + user[0][1]}")
     await state.clear()
+    await message.edit_reply_markup()
     log_file_printer(f"{message.from_user.id} - Registration fine - contact: " + str((data["first_name"],
                                                                                          data["last_name"],
                                                                                          data["father_name"],
