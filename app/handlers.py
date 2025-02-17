@@ -1,19 +1,21 @@
 import datetime
-import logging
+import logging, os
 from aiogram import F, Router
-from aiogram.types import Message, CallbackQuery, PollAnswer
+from aiogram.types import Message, CallbackQuery, PollAnswer, FSInputFile
 from aiogram.filters import CommandStart, Command
 from aiogram.filters.callback_data import CallbackData
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.context import FSMContext
 from database import models
-from app.keyboards import main, get_number, YoN, my_callback_data
-from database.requests import select_users, select_user, insert_user_from_register, NewsLetterStart, edited_text_with_first_name
+from app.keyboards import main, get_number, YoN, my_callback_data, Assortment, Back_to_assortment
+from database.requests import select_users, select_user, insert_user_from_register, NewsLetterStart, \
+    edited_text_with_first_name
 from main import bot, log_file_printer, log_file, dp
-from confidential import admin_id
+from confidential import admin_id, cream_honey_
 
 router = Router()
 logger = logging.getLogger(__name__)
+
 
 class Register(StatesGroup):
     first_name = State()
@@ -28,8 +30,14 @@ class NewsLetter(StatesGroup):
 
 @router.message(CommandStart())
 async def cmd_start(message: Message):
-    await message.answer('Выбер пункт', reply_markup=main)
+    await message.answer('Выбери пункт', reply_markup=main)
     log_file_printer(f"{message.from_user.id} - /start: ", log_file)
+
+
+@router.callback_query(my_callback_data.filter(F.data == 'main'))
+async def cmd_main_query(query: CallbackQuery):
+    await bot.send_message(query.from_user.id, 'Выбери пункт', reply_markup=main)
+    log_file_printer(f"{query.from_user.id} - /start: ", log_file)
 
 
 @router.message(F.text == 'qawsed')
@@ -39,11 +47,32 @@ async def NewsLetter_(message: Message, state: FSMContext):
     log_file_printer(f"{message.from_user.id} - NewsLetter: ", log_file)
 
 
+@router.message(F.text == 'Ассортимент')
+async def assortment(message: Message):
+    await message.answer("Выберите товар, чтобы прочитать его описание: ", reply_markup=Assortment)
+    log_file_printer(f"{message.from_user.id} - assortment: ", log_file)
+
+
+@router.callback_query(my_callback_data.filter(F.data == 'assortment'))
+async def assortment_query(query: CallbackQuery):
+    await bot.send_message(query.from_user.id, "Выберите товар, чтобы прочитать его описание: ",
+                           reply_markup=Assortment)
+    log_file_printer(f"{query.from_user.id} - assortment: ", log_file)
+
+
+@router.callback_query(my_callback_data.filter(F.data == 'cream_honey'))
+async def cream_honey(query: CallbackQuery):
+    photo = FSInputFile("content//cream_honey.jpg")
+    await bot.send_photo(chat_id=query.from_user.id, photo=photo, caption=cream_honey_[0])
+    await bot.send_message(query.from_user.id, text=cream_honey_[1], reply_markup=Back_to_assortment)
+    log_file_printer(f"{query.from_user.id} - assortment: ", log_file)
+
+
 @router.message(NewsLetter.text)
 async def NewsLetter_text(message: Message, state: FSMContext):
     text = message.text
     user_tg_id = message.from_user.id
-    #print(text, type(text))
+    # print(text, type(text))
     text = edited_text_with_first_name(text, user_tg_id)
     await message.answer(f"Это все, отправляем?: \n {text}", reply_markup=YoN)
     await state.update_data(text=text)
@@ -84,12 +113,14 @@ async def register_first_name(message: Message, state: FSMContext):
     await message.answer('Напишите вашу ФАМИЛИЮ, пожалуйста:')
     log_file_printer(f"{message.from_user.id} - Registration - first_name: " + message.text, log_file)
 
+
 @router.message(Register.last_name)
 async def register_first_name(message: Message, state: FSMContext):
     await state.update_data(last_name=message.text)
     await state.set_state(Register.father_name)
     await message.answer('Напишите ваше ОТЧЕСТВО, пожалуйста:')
     log_file_printer(f"{message.from_user.id} - Registration - last_name: " + message.text, log_file)
+
 
 @router.message(Register.father_name)
 async def register_name(message: Message, state: FSMContext):
@@ -104,19 +135,21 @@ async def register_number(message: Message, state: FSMContext):
     await state.update_data(user_tg_id=message.contact.user_id)
     data = await state.get_data()
     priority = 0
-    for i in range(admin_id):
+    for i in range(len(admin_id)):
         if data["user_tg_id"] == admin_id[i]:
             priority = 1
         else:
             priority = 0
-    insert_user_from_register(data["first_name"], data["last_name"], data["father_name"], priority, data["user_tg_id"], message.contact.phone_number)
+    insert_user_from_register(data["first_name"], data["last_name"], data["father_name"], priority, data["user_tg_id"],
+                              message.contact.phone_number)
     user = select_user(models.path, data["user_tg_id"])
     await message.answer(f"Вы теперь юзер: {user[0][0] + user[0][1]}")
     await state.clear()
     await message.edit_reply_markup()
     log_file_printer(f"{message.from_user.id} - Registration fine - contact: " + str((data["first_name"],
-                                                                                         data["last_name"],
-                                                                                         data["father_name"],
-                                                                                         priority,
-                                                                                         data["user_tg_id"],
-                                                                                         message.contact.phone_number)), log_file)
+                                                                                      data["last_name"],
+                                                                                      data["father_name"],
+                                                                                      priority,
+                                                                                      data["user_tg_id"],
+                                                                                      message.contact.phone_number)),
+                     log_file)
