@@ -11,7 +11,7 @@ from app.keyboards import main, get_number, YoN, my_callback_data, Assortment, B
 from database.requests import select_users, select_user, insert_user_from_register, NewsLetterStart, \
     edited_text_with_first_name
 from main import bot, log_file_printer, log_file, dp
-from confidential import admin_id, cream_honey_, propolis_, drone_jelly_
+from confidential import admin_id, cream_honey_, propolis_, drone_jelly_, wine_with_honey_, mead_, bee_pollen_, lining_, honey_
 
 router = Router()
 logger = logging.getLogger(__name__)
@@ -70,14 +70,53 @@ async def cream_honey(query: CallbackQuery):
 @router.callback_query(my_callback_data.filter(F.data == 'propolis'))
 async def cream_honey(query: CallbackQuery):
     photo = FSInputFile("content//propolis.jpg")
-    await bot.send_photo(chat_id=query.from_user.id, photo=photo, caption=propolis_[0], reply_markup=Back_to_assortment)
+    await bot.send_photo(chat_id=query.from_user.id, photo=photo, caption=propolis_[0])
+    await bot.send_message(query.from_user.id, text=propolis_[1], reply_markup=Back_to_assortment)
     log_file_printer(f"{query.from_user.id} - propolis_assortment: ", log_file)
 
 @router.callback_query(my_callback_data.filter(F.data == 'drone_jelly'))
 async def cream_honey(query: CallbackQuery):
     photo = FSInputFile("content//drone_jelly.jpg")
-    await bot.send_photo(chat_id=query.from_user.id, photo=photo, caption=drone_jelly_[0], reply_markup=Back_to_assortment)
+    await bot.send_photo(chat_id=query.from_user.id, photo=photo, caption=drone_jelly_[0])
+    await bot.send_message(query.from_user.id, text=drone_jelly_[1], reply_markup=Back_to_assortment)
     log_file_printer(f"{query.from_user.id} - drone_jelly_assortment: ", log_file)
+
+@router.callback_query(my_callback_data.filter(F.data == 'wine_with_honey'))
+async def cream_honey(query: CallbackQuery):
+    photo = FSInputFile("content//wine_with_honey.jpg")
+    await bot.send_photo(chat_id=query.from_user.id, photo=photo, caption=wine_with_honey_[0])
+    await bot.send_message(query.from_user.id, text=wine_with_honey_[1], reply_markup=Back_to_assortment)
+    log_file_printer(f"{query.from_user.id} - wine_with_honey_assortment: ", log_file)
+
+@router.callback_query(my_callback_data.filter(F.data == 'mead'))
+async def cream_honey(query: CallbackQuery):
+    photo = FSInputFile("content//mead.jpg")
+    await bot.send_photo(chat_id=query.from_user.id, photo=photo, caption=mead_[0])
+    await bot.send_message(query.from_user.id, text=mead_[1], reply_markup=Back_to_assortment)
+    log_file_printer(f"{query.from_user.id} - mead_assortment: ", log_file)
+
+@router.callback_query(my_callback_data.filter(F.data == 'bee_pollen'))
+async def cream_honey(query: CallbackQuery):
+    photo = FSInputFile("content//bee_pollen.jpg")
+    await bot.send_photo(chat_id=query.from_user.id, photo=photo, caption=bee_pollen_[0])
+    await bot.send_message(query.from_user.id, text=bee_pollen_[1])
+    await bot.send_message(query.from_user.id, text=bee_pollen_[2], reply_markup=Back_to_assortment)
+    log_file_printer(f"{query.from_user.id} - bee_pollen_assortment: ", log_file)
+
+@router.callback_query(my_callback_data.filter(F.data == 'lining'))
+async def cream_honey(query: CallbackQuery):
+    photo = FSInputFile("content//lining.jpg")
+    await bot.send_photo(chat_id=query.from_user.id, photo=photo, caption=lining_[0])
+    await bot.send_message(query.from_user.id, text=lining_[1])
+    await bot.send_message(query.from_user.id, text=lining_[2], reply_markup=Back_to_assortment)
+    log_file_printer(f"{query.from_user.id} - lining_assortment: ", log_file)
+
+@router.callback_query(my_callback_data.filter(F.data == 'honey'))
+async def cream_honey(query: CallbackQuery):
+    photo = FSInputFile("content//honey.jpg")
+    await bot.send_photo(chat_id=query.from_user.id, photo=photo, caption=honey_[0])
+    await bot.send_message(query.from_user.id, text=honey_[1], reply_markup=Back_to_assortment)
+    log_file_printer(f"{query.from_user.id} - honey_assortment: ", log_file)
 
 @router.message(NewsLetter.text)
 async def NewsLetter_text(message: Message, state: FSMContext):

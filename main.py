@@ -10,9 +10,6 @@ from confidential import token, admin_id
 logger = logging.getLogger(__name__)
 log_file = 'logs.txt'
 
-from app.keyboards import YoN, Assortment
-print(type(YoN), type(Assortment))
-
 
 def log_file_printer(printing, log_file_):
     file = open(log_file_, "a", encoding='utf-8')
